@@ -4,14 +4,17 @@ import styled from 'styled-components'
 const Container = styled.div`
     width: 15vw;
     height:20vh;
-    margin:2vh auto;
+    margin:6vh auto;
     box-shadow: 0 0 3px gray;
     border-radius:10px;
+    text-align:center;
 `
 
-function Widget() {
+function Widget(props) {
   return (
-    <Container>Widget</Container>
+    <Container>
+      {props.children}
+    </Container>
   )
 }
 

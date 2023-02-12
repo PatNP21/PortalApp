@@ -1,15 +1,16 @@
 import React from 'react'
 import {useForm} from 'react-hook-form'
-import {useNavigate} from 'react-router-dom'
+import {useNavigate, useParams} from 'react-router-dom'
 import {useCookies} from 'react-cookie'
 import styled from 'styled-components'
 import AccountHandler from '../../handlers/AccountHandler'
+import { Modal, Typography, Box, Button } from '@mui/material';
 
 const Container = styled.div`
     width:fit-content;
     height:fit-content;
     padding: 20px;
-    box-shadow: 2px 2px 2px #777;
+    box-shadow: 0 0 3px #666;
     border-radius:10px;
     margin: 20vh auto;
 `
@@ -31,31 +32,27 @@ const Input = styled.input`
 function NewPassword() {
     const {register, handleSubmit} = useForm()
     const navigate = useNavigate()
-    const [cookies] = useCookies()
-
+    const {userID} = useParams()
     const account_handler = new AccountHandler()
 
     const onSubmit = (data) => {
-        console.log(data)
-        account_handler.setNewPassword(cookies.loginData[0].id, data).then(res => {
+        account_handler.setNewPassword(userID, data).then(res => {
             navigate('/login/login')
         })
     }
 
     return (
-        <Container>
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <InputField>
-                    <Input type="password" placeholder='Enter new pasword' {...register('password')}/>
-                </InputField>
-                
-                <InputField>
-                    <Input type="password" placeholder='Repeat the password' {...register('repeatPassword')}/>
-                </InputField>
-                
-                <Input type="submit" value="Submit"/>
-            </form>
-        </Container>
+        <>
+            <Container>
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <InputField>
+                        <Input type="password" placeholder='Enter new password' {...register('password')}/>
+                    </InputField>
+                    
+                    <Input type="submit" value="Submit"/>
+                </form>
+            </Container>
+        </>
     )
 }
 

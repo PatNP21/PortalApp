@@ -1,8 +1,13 @@
 import React, {useState, useEffect} from 'react'
 import styled from 'styled-components'
 import CommentSection from '../CommentSection/CommentSection'
+import { useCookies } from 'react-cookie'
+import { useNavigate } from 'react-router-dom'
 import avatar from './../../avatar.png'
 import PostHandler from '../../handlers/PostHandler'
+import {HiTrash} from 'react-icons/hi'
+import {AiFillEdit} from 'react-icons/ai'
+import { Modal, Typography, Box } from '@mui/material';
 
 const Container = styled.div`
     width:40vw;
@@ -35,36 +40,69 @@ const Image = styled.img`
 const Content = styled.p`
     justify-content:center;
 `
+const PostOptions = styled.div`
+    display:inline-block;
+    margin-left:20vw;
+`
+const DonateButton = styled.button`
+    width:fit-content;
+    height:fit-content;
+    margin-left:20vw;
+    display:inline-block;
+    border:none;
+    border-radius:8px;
+    padding:10px;
+`
+const PostOption = styled.button`
+    width:fit-content;
+    height:fit-content;
+    float:left;
+    margin:0 1vw;
+    font-size:20px;
+    cursor:pointer;
+    background-color:#fff;
+    border:none;
+`
 
 function PostItem(props) {
 
     const post_handler = new PostHandler()
+
+    const [cookies] = useCookies()
+
+    const navigate = useNavigate()
+
     const [loadedState, setLoadedState] = useState(false)
 
     const [author, setAuthor] = useState()
-
-    let fromBuffer
+    const [id, setId] = useState()
+    const [openSuccessModal, setOpenSuccessModal] = useState(false)
+    const [openFailureModal, setOpenFailureModal] = useState(false)
 
     useEffect(() => {
         post_handler.getAuthorById(props.author).then(res => {
             console.log(res.data.rows[0])
             setAuthor(`${res.data.rows[0].firstname} ${res.data.rows[0].lastname}`)
+            setId(Number(res.data.rows[0].id))
             console.log(author)
             setLoadedState(true)
         })
-        fromBuffer = btoa(String.fromCharCode(...new Uint8Array(props.multimedia)))
-        console.log(props.multimedia)
-        console.log(fromBuffer)
     }, [])
-
+    
   return (
     <div>
         {loadedState && <Container>
             <Avatar src={avatar}/>
             <AuthorHeader>{author}</AuthorHeader>
-            <CreatingDate>{props.creatingDate}</CreatingDate>
+            {props.author !== cookies.loginData.data.user[0].id &&
+                <DonateButton onClick={() => {
+                    navigate(`/myWallet/${cookies.loginData.data.user[0].id}`, {state: {level: 'donate', receiver: id}})
+                }}>
+                    Donate
+                </DonateButton>
+            }
+            <CreatingDate>{new Date(props.creatingDate).toLocaleDateString('en-CA')}</CreatingDate>
             <Content>
-                <img src={`${props.multimedia}:image/png;base64,${fromBuffer}`}/>
                 {props.content}
             </Content>
             <CommentSection post_id={props.post_id}/>

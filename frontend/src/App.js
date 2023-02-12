@@ -10,37 +10,45 @@ import Profile from './components/Profile/Profile';
 import RecoverPassword from './components/RecoverPassword/RecoverPassword';
 import NewPassword from './components/RecoverPassword/NewPassword';
 import Stock from './components/Stock/Stock';
-import Friends from './components/Friends/Friends';
-import Notifications from './components/Notifications/Notifications';
+import ChatList from './components/Chat/ChatList';
+import Wallet from './components/Wallet/Wallet';
+import { FinnhubProvider } from 'react-finnhub'
+import StockCryptoHandler from './handlers/StockCryptoHandler'
+import ExtendedNewsInfo from './components/News/ExtendedNewsInfo';
 import Payment from './components/Payment/Payment';
-import PaymentFeedback from './components/Payment/PaymentFeedback';
+import ExtendedOwnedItem from './components/Wallet/ExtendedOwnedItem';
 
 function App() {
-
+  const operateHandler = new StockCryptoHandler()
   const {userID} = useParams()
 
   return (
-    <Router>
-      <Routes>
-        <Route path="" element={<Login/>} />
-        <Route path="login/:sth" element={<Login/>} />
-        <Route path="register" element={<Register/>} />
-        <Route path="payment" element={<Payment/>} />
-        <Route path="paymentFeedback" element={<PaymentFeedback/>} />
-        <Route path="chat" element={<Chat/>} />
-        <Route path="crypto" element={<Crypto/>} />
-        <Route path="dashboard" element={<Dashboard/>} />
-        <Route path="news" element={<News/>} />
-        <Route path="profile" element={<Profile/>}>
-          <Route path=":userID" element={<Profile/>}/>
-        </Route>
-        <Route path="stock" element={<Stock/>} />
-        <Route path="recoverPassword" element={<RecoverPassword/>} />
-        <Route path="newPassword/:id/:sth" element={<NewPassword/>} />
-        <Route path="friends" element={<Friends/>} />
-        <Route path="notifications" element={<Notifications/>}/>
-      </Routes>
-    </Router>
+    <FinnhubProvider client={operateHandler.client_stock}>
+      <Router>
+        <Routes>
+          <Route path="" element={<Login/>} />
+          <Route path="login/:sth" element={<Login/>} />
+          <Route path="register" element={<Register/>} />
+          <Route path="payment" element={<Payment/>}/>
+          <Route path="chatList" element={<ChatList/>}/>
+          <Route path="chat" element={<Chat/>}>
+            <Route path=":userID" element={<Chat/>}/>
+          </Route>
+          <Route path="crypto" element={<Crypto/>} />
+          <Route path="dashboard" element={<Dashboard/>} />
+          <Route path="newsList" element={<News/>} />
+          <Route path="news/:id" element={<ExtendedNewsInfo/>}/>
+          <Route path="profile" element={<Profile/>}>
+            <Route path=":userID" element={<Profile/>}/>
+          </Route>
+          <Route path="stock" element={<Stock/>} />
+          <Route path="recoverPassword" element={<RecoverPassword/>} />
+          <Route path="newPassword/:sth/:userID" element={<NewPassword/>} />
+          <Route path="myWallet/:userID" element={<Wallet/>}/>
+          <Route path="item" element={<ExtendedOwnedItem/>}/>
+        </Routes>
+      </Router>
+    </FinnhubProvider>
   );
 }
 

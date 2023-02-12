@@ -4,14 +4,14 @@ import { useNavigate } from 'react-router-dom'
 import { useCookies } from 'react-cookie';
 import styled from 'styled-components'
 import AccountHandler from '../../handlers/AccountHandler'
-import LoadingModal from '../../modals/LoadingModal';
-import Modal from 'react-modal'
+import Loader from '../../modals/Loader';
+import Modal from '../../modals/Modal';
 
 const Container = styled.div`
     width:fit-content;
     height:fit-content;
     padding: 20px;
-    box-shadow: 2px 2px 2px #777;
+    box-shadow: 0 0 3px #777;
     border-radius:10px;
     margin: 20vh auto;
 `
@@ -29,6 +29,11 @@ const Input = styled.input`
     border:none;
     border-radius:10px;
 `
+const A = styled.a`
+    text-align:center;
+    display:block;
+    margin:1vh 0;
+`
 const SubmitBtn = styled.input`
     display:block;
     width: 18vw;
@@ -45,30 +50,28 @@ function Login() {
     const navigate = useNavigate()
     const [cookies, setCookie] = useCookies()
     const [waitingForResponseModal, setWaitingForResponseModal] = useState(false)
+    const [openFailureModal, setOpenFailureModal] = useState(false)
 
     const account_handler = new AccountHandler()
 
-    const onSubmit = (data) => {
-        console.log(data)
+    const login = (data) => {
         setWaitingForResponseModal(true)
         account_handler.logToService(data).then(res => {
             setWaitingForResponseModal(false)
-            console.log(res)
-            setCookie('loginData', res.data.user)
+            setCookie('loginData', res, {SameSite: 'none'})
             navigate('/dashboard')
         }).catch(err => {
             setWaitingForResponseModal(false)
-            console.log(err)
-            alert('User not found')
+            setOpenFailureModal(true)
         })
     }
 
     return (
         <>
             <Container>
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <form onSubmit={handleSubmit(login)}>
                     <InputField>
-                        <Input type="text" placeholder='Email or username' {...register('user')}/>
+                        <Input type="text" placeholder='Email' {...register('user')}/>
                     </InputField>
                     
                     <InputField>
@@ -76,10 +79,19 @@ function Login() {
                     </InputField>
                     
                     <SubmitBtn type="submit" value="Sign in"/>
+                    <A href="/recoverPassword">Forgot your password</A>
+                    <A href='/register'>Create a new account</A>
                 </form>
             </Container>
             {waitingForResponseModal && 
+                <Loader/>
+            }
+            {openFailureModal && 
                 <Modal>
+                    <div>User not found</div>
+                    <button onClick={() => {
+                        setOpenFailureModal(false)
+                    }}>OK</button>
                 </Modal>
             }
         </>

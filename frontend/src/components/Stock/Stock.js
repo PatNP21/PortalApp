@@ -3,12 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import Header from '../../elements/Header/Header'
 import StockCryptoHandler from '../../handlers/StockCryptoHandler'
 import {Circles} from 'react-loader-spinner'
+import { FinnhubProvider, useFinnhub } from 'react-finnhub'
+import Chart from './../../elements/Chart'
 import styled from 'styled-components'
+import Loader from '../../modals/Loader'
 
 const MenuContainer = styled.div`
   width:fit-content;
   margin:2vh auto;
   height:8vh;
+`
+const SearchInput = styled.input`
+  display:block;
 `
 const Select = styled.select`
   border-radius:8px;
@@ -37,6 +43,16 @@ const Price = styled.div`
   box-shadow:0 0 3px gray;
   padding:0 2vw;
 `
+const ChartDiv = styled.div`
+  width:60vw;
+  max-width:1000px;
+  height:fit-content;
+  max-height:400px;
+  overflow:hidden;
+  margin:auto;
+  border-radius:10px;
+  box-shadow:0 0 3px gray;
+`
 
 function Stock() {
 
@@ -44,76 +60,87 @@ function Stock() {
 
   const navigate = useNavigate()
 
+
   const [loaded, updateLoaded] = useState(false)
-  const [stockList, setStockList] = useState([])
+  let stockList = []
   const [stockData, setStockData] = useState()
+  const [stockPrice, setStockPrice] = useState()
+  let array
+  const [list, setList] = useState([])
+  const [showChart, updateShowChart] = useState(false)
 
   let stock
-  //const [stock, selectStock] = useState('')
-
+  const [selectedStock, selectStock] = useState('')
 
   useEffect(() => {
-    
     operateHandler.getStocks().then(res => {
-      updateLoaded(true)
-      //console.log(res.data.data)
-      let stockArray = res.data.data
-      console.log(typeof stockArray)
-      //console.log(stockArray)
-      let properList = stockArray.filter(item => {
-        return (item.currency.includes('USD') && item.type.includes('Common Stock') && item.country.includes("United States"))
+      array = res.data.data.filter(item => {
+        return item.type === 'Common Stock' && item.country === "United States" && item.exchange === "NASDAQ"
       })
-      //console.log(properList)
-      setStockList(properList.slice(0, 99))
-      console.log(stockList)
+      console.log(array)
+      if(array.length > 0) {
+        setList(array)
+        updateLoaded(true)
+      }
+    }).catch(err => {
+      console.log(err)
     })
-  })
+    console.log(list.length)
+
+  }, [])
 
   const getAPI = (stock) => {
     console.log(stock)
     operateHandler.getAPI(stock).then(res => {
-      console.log(res)
-      setStockData(res.data.values)
-      console.log(`stock: ${stock}`)
-      return stock
+      console.log(res.data.rows)
+      //setStockData(1000)
+      setStockData({
+        high: res.data.values[0].high,
+        low: res.data.values[0].low,
+        open: res.data.values[0].open,
+        close: res.data.values[0].close,
+        volume: res.data.values[0].volume,
+        stockPrice: Number(Math.random()*(Number(res.data.values[0].high)-Number(res.data.values[0].low)))+Number(res.data.values[0].low)
+      })
+      console.log(stockData)
+      setStockPrice(res.data.values)
+
+      if(stockPrice) {
+
+        updateShowChart(true)
+      }
     }).catch(err => {
-      console.log(err)
+      console.log(`coś poszło nie tak: ${err}`)
     })
   }
 
   return (
-    <div>
+    <>
       <Header/>
       {!loaded ? 
-        <Circles color="#00BFFF" height={80} width={80}/> : 
+        <Loader/> : 
         <div>
           <MenuContainer>
-            <Select
+            <select
               value={stock}
               onChange={(e) => {
                   stock = e.target.value
+                  selectStock(stock)
                   console.log(stock)
-                  getAPI(stock)
-                  return stock
+                  console.log(selectedStock)
+                  getAPI(selectedStock)
                 }
               }
             >
-              {stockList && stockList.map(item => {
-                return <option value={item.symbol}>
-                  {item.name}
-                </option> 
+              {list.length && list.map(item => {
+                return <option value={item.symbol}>{item.name}</option>
               })}
-            </Select>
+            </select>
           </MenuContainer>
 
           <BtnsSection>
             <OptionButton onClick={() => {
-              navigate('/payment')
-            }}>
-              Sell
-            </OptionButton>
-            <OptionButton onClick={() => {
-              navigate('/payment')
+              navigate('/payment', {state: {item: selectedStock, price: stockData.open}})
             }}>
               Invest
             </OptionButton>
@@ -128,22 +155,24 @@ function Stock() {
                 <th>high</th>
                 <th>close</th>
                 <th>volume</th>
-                <th>last transaction</th>
               </tr>
               <tr>
-                <td>{getAPI(stock)}</td>
-                <td>{stockData && stockData[0].open}$</td>
-                <td>{stockData && stockData[0].low}$</td>
-                <td>{stockData && stockData[0].high}$</td>
-                <td>{stockData && stockData[0].close}$</td>
-                <td>{stockData && stockData[0].volume}</td>
-                <td>{stockData && stockData[0].datetime}</td>
+                <td>{selectedStock}</td>
+                <td>{stockData && stockData.open}$</td>
+                <td>{stockData && stockData.low}$</td>
+                <td>{stockData && stockData.high}$</td>
+                <td>{stockData && stockData.close}$</td>
+                <td>{stockData && stockData.volume}</td>
               </tr>
             </table>
           </Price>
+          <Price>{stockData && Number(stockData.stockPrice)} $</Price>
+          <ChartDiv>
+            {showChart && stockData ? <Chart dataToStore={stockPrice}/> : <p>N/A</p>}
+          </ChartDiv>
         </div>  
       }
-    </div>
+    </>
   )
 }
 

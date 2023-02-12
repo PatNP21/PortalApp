@@ -1,8 +1,9 @@
-import React from 'react'
+import React, {useState} from 'react'
 import styled from 'styled-components'
 import {useForm} from 'react-hook-form'
 import {IoMdAttach} from 'react-icons/io'
 import PostHandler from '../../handlers/PostHandler'
+import { useCookies } from 'react-cookie'
 
 const Container = styled.div`
     width:42vw;
@@ -21,12 +22,6 @@ const Textarea = styled.textarea`
     margin: 2vh auto;
     float:left;
 `
-const Attachment = styled.div`
-  width:fit-content;
-  height:fit-content;
-  float:left;
-  font-size:2rem;
-`
 const SubmitBtn = styled.button`
   width: 8vw;
   height: 5vh;
@@ -41,35 +36,30 @@ const SubmitBtn = styled.button`
 function PostCreator(props) {
 
   const {register, handleSubmit} = useForm()
+  const [cookies] = useCookies()
   const post_handler = new PostHandler()
 
-  const onSubmit = (data) => {
+  const [openSuccessModal, setOpenSuccessModal] = useState(false)
+  const [openFailureModal, setOpenFailureModal] = useState(false)
+
+  const writePost = (data) => {
     let postData
     console.log(data)
-    postData = {...data, authorId: props.authorid}
+    postData = {...data, authorId: cookies.loginData.data.user[0].id}
     console.log(postData)
     post_handler.writePost(postData).then(res => {
       console.log(res)
+      setOpenSuccessModal(true)
+    }).catch(err => {
+      console.log(err)
+      setOpenFailureModal(true)
     })
   }
 
   return (
     <Container>
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(writePost)}>
         <Textarea placeholder='Write your post' {...register('content')}/>
-        <Attachment>
-          <label htmlFor="attachmentInput">
-            <IoMdAttach/>
-          </label>
-          <input 
-            id="attachmentInput" 
-            style={{display:'none'}} 
-            type="file" 
-            onChange={(e) => URL.createObjectURL(e.target.files[0])} 
-            accept="[video/*, image/*]"
-            {...register('multimedia')}
-          />
-        </Attachment>
         <SubmitBtn>Add</SubmitBtn>
       </form>
     </Container>
